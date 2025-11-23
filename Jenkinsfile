@@ -20,26 +20,29 @@ pipeline {
         stage('Build JAR') {
             steps {
                 echo "Building Spring Boot app..."
-                bat "mvn clean package -DskipTests"
+                bat 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
-                bat "docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -f Dockerfile ."
+                bat """
+                docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile .
+                """
             }
         }
 
         stage('Prepare K8s Files') {
             steps {
                 echo "Preparing Kubernetes YAML files..."
+
                 bat """
-                set K8_NAMESPACE=%K8_NAMESPACE%
-                set APP_NAME=%APP_NAME%
-                set DOCKER_IMAGE=%DOCKER_IMAGE%
-                set BUILD_NUMBER=%BUILD_NUMBER%
-                set NODE_PORT=%NODE_PORT%
+                set K8_NAMESPACE=${K8_NAMESPACE}
+                set APP_NAME=${APP_NAME}
+                set DOCKER_IMAGE=${DOCKER_IMAGE}
+                set BUILD_NUMBER=${BUILD_NUMBER}
+                set NODE_PORT=${NODE_PORT}
 
                 mkdir k8s_output
 
