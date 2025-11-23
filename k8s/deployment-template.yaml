@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ${APP_NAME}-deployment
-  namespace: ${K8_NAMESPACE}
+  namespace: ${APP_NAMESPACE}
 spec:
-  replicas: 2
+  replicas: ${REPLICA_COUNT}
   selector:
     matchLabels:
       app: ${APP_NAME}
@@ -14,8 +14,8 @@ spec:
         app: ${APP_NAME}
     spec:
       containers:
-      - name: ${APP_NAME}-container
-        image: ${DOCKER_IMAGE}:${BUILD_NUMBER}
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8200
+        - name: ${APP_NAME}-container
+          image: ${IMAGE_NAME}:${IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: ${APP_PORT}
