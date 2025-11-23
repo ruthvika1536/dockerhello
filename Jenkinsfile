@@ -1,18 +1,14 @@
 pipeline {
+    agent any
+
     environment {
         APP_NAME = "dockerhello"
         DOCKER_IMAGE = "dockerhello_image"
         K8_NAMESPACE = "dockerhello-ns"
         NODE_PORT = "30200"
     }
-    stages {
 
-        stage('Checkout') {
-            steps {
-                echo "Checking out code..."
-                git branch: 'main', url: 'https://github.com/ruthvika1536/dockerhello'
-            }
-        }
+    stages {
 
         stage('Build JAR') {
             steps {
@@ -24,16 +20,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image..."
-                bat """
-                docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile .
-                """
+                bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile ."
             }
         }
 
         stage('Prepare K8s Files') {
             steps {
                 echo "Preparing Kubernetes YAML files..."
-
                 bat """
                 set K8_NAMESPACE=${K8_NAMESPACE}
                 set APP_NAME=${APP_NAME}
@@ -62,10 +55,10 @@ pipeline {
 
     post {
         success {
-            echo " Deployment successful!"
+            echo "Deployment successful!"
         }
         failure {
-            echo " Deployment failed."
+            echo "Deployment failed."
         }
     }
 }
