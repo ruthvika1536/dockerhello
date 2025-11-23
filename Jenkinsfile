@@ -5,7 +5,6 @@ pipeline {
         K8_NAMESPACE = "dockerhello-ns"
         NODE_PORT = "30200"
     }
-
     stages {
 
         stage('Checkout') {
