@@ -2,53 +2,70 @@ pipeline {
     agent any
 
     environment {
+        APP_NAME = "dockerhello"
         DOCKER_IMAGE = "dockerhello_image"
-        CONTAINER_NAME = "dockerhello_container"
+        K8_NAMESPACE = "dockerhello-ns"
+        NODE_PORT = "30200"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo "📥 Checking out code from GitHub..."
+                echo "Checking out code..."
                 git branch: 'main', url: 'https://github.com/ruthvika1536/dockerhello'
             }
         }
 
         stage('Build JAR') {
             steps {
-                echo "🛠️ Building Spring Boot JAR..."
+                echo "Building Spring Boot app..."
                 bat "mvn clean package -DskipTests"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "🐳 Building Docker Image..."
-                bat "docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} -f Dockerfile ."
+                echo "Building Docker image..."
+                bat "docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -f Dockerfile ."
             }
         }
 
-        stage('Run Docker Container') {
+        stage('Prepare K8s Files') {
             steps {
-                script {
-                    echo "🛑 Stopping previous container (if exists)..."
-                    bat "docker stop ${CONTAINER_NAME} || exit 0"
-                    bat "docker rm ${CONTAINER_NAME} || exit 0"
+                echo "Preparing Kubernetes YAML files..."
+                bat """
+                set K8_NAMESPACE=%K8_NAMESPACE%
+                set APP_NAME=%APP_NAME%
+                set DOCKER_IMAGE=%DOCKER_IMAGE%
+                set BUILD_NUMBER=%BUILD_NUMBER%
+                set NODE_PORT=%NODE_PORT%
 
-                    echo "🚀 Starting new Docker container..."
-                    bat "docker run -d --name ${CONTAINER_NAME} -p 8200:8200 ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                }
+                mkdir k8s_output
+
+                envsubst < k8s/namespace-template.yaml > k8s_output/namespace.yaml
+                envsubst < k8s/deployment-template.yaml > k8s_output/deployment.yaml
+                envsubst < k8s/service-template.yaml > k8s_output/service.yaml
+                """
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "Deploying to Kubernetes..."
+                bat "kubectl apply -f k8s_output/namespace.yaml"
+                bat "kubectl apply -f k8s_output/deployment.yaml"
+                bat "kubectl apply -f k8s_output/service.yaml"
             }
         }
     }
 
     post {
         success {
-            echo "✅ CI/CD Success! App deployed via Docker."
+            echo "🚀 Deployment successful!"
         }
         failure {
-            echo "❌ Pipeline Failed! Check logs."
+            echo "❌ Deployment failed."
         }
     }
 }
