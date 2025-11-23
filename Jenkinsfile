@@ -1,6 +1,4 @@
 pipeline {
-    agent any
-
     environment {
         APP_NAME = "dockerhello"
         DOCKER_IMAGE = "dockerhello_image"
@@ -65,10 +63,10 @@ pipeline {
 
     post {
         success {
-            echo "🚀 Deployment successful!"
+            echo " Deployment successful!"
         }
         failure {
-            echo "❌ Deployment failed."
+            echo " Deployment failed."
         }
     }
 }
